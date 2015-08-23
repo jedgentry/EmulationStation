@@ -33,6 +33,7 @@ set(ES_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scrapers/TheArchiveScraper.h
 
     # Views
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/Keyboard.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/BasicGameListView.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/DetailedGameListView.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/IGameListView.h
@@ -79,6 +80,7 @@ set(ES_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scrapers/TheArchiveScraper.cpp
 
     # Views
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/Keyboard.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/BasicGameListView.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/DetailedGameListView.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/IGameListView.cpp

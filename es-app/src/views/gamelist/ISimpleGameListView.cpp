@@ -4,21 +4,30 @@
 #include "views/ViewController.h"
 #include "Sound.h"
 #include "Settings.h"
+#include "SystemData.h"
 
 ISimpleGameListView::ISimpleGameListView(Window* window, FileData* root) : IGameListView(window, root),
-	mHeaderText(window), mHeaderImage(window), mBackground(window), mThemeExtras(window)
+mHeaderText(window), mHeaderImage(window), mBackground(window), mThemeExtras(window), mKeyboardText(window)
 {
+	mKeyboard = new Keyboard("en", SystemData::sSystemVector);
 	mHeaderText.setText("Logo Text");
 	mHeaderText.setSize(mSize.x(), 0);
 	mHeaderText.setPosition(0, 0);
 	mHeaderText.setAlignment(ALIGN_CENTER);
-	
+
+	mKeyboardText.setText(mKeyboard->getKeys());
+	mKeyboardText.setSize(mSize.x(), 0);
+	mKeyboardText.setPosition(0, mSize.y() * 0.15f);
+	mKeyboardText.setColor(0x00000088);
+	mKeyboardText.setAlignment(ALIGN_CENTER);
+
 	mHeaderImage.setResize(0, mSize.y() * 0.185f);
 	mHeaderImage.setOrigin(0.5f, 0.0f);
 	mHeaderImage.setPosition(mSize.x() / 2, 0);
 
 	mBackground.setResize(mSize.x(), mSize.y());
 
+	addChild(&mKeyboardText);
 	addChild(&mHeaderText);
 	addChild(&mBackground);
 	addChild(&mThemeExtras);
@@ -50,12 +59,12 @@ void ISimpleGameListView::onFileChanged(FileData* file, FileChangeType change)
 	populateList(cursor->getParent()->getChildren());
 	setCursor(cursor);
 }
-
+//Handles the input for the game views.
 bool ISimpleGameListView::input(InputConfig* config, Input input)
 {
-	if(input.value != 0)
+	if (input.value != 0) //Redirect input if keyboard is open.
 	{
-		if(config->isMappedTo("a", input))
+		if (config->isMappedTo("a", input) && !mKeyboard->isOpen())
 		{
 			FileData* cursor = getCursor();
 			if(cursor->getType() == GAME)
@@ -72,7 +81,7 @@ bool ISimpleGameListView::input(InputConfig* config, Input input)
 			}
 				
 			return true;
-		}else if(config->isMappedTo("b", input))
+		}else if(config->isMappedTo("b", input) && !mKeyboard->isOpen())
 		{
 			if(mCursorStack.size())
 			{
@@ -86,7 +95,13 @@ bool ISimpleGameListView::input(InputConfig* config, Input input)
 			}
 
 			return true;
-		}else if(config->isMappedTo("right", input))
+		}
+		else if (config->isMappedTo("y", input)) //User has opened up the keyboard.
+		{
+			mKeyboard->setKeyboardIsOpen(true);
+			return true; //Return like other inputs.
+		}
+		else if(config->isMappedTo("right", input))
 		{
 			if(Settings::getInstance()->getBool("QuickSystemSelect"))
 			{
@@ -104,6 +119,63 @@ bool ISimpleGameListView::input(InputConfig* config, Input input)
 			}
 		}
 	}
+	//Redirect input to keyboard.
+	//There needs to be a sleep timer on the y option.
+	//THERE IS ALREADY A JUMP TO LETTER FUNCTION IN GUIGAMELISTOPTIONS.cpp
+	if (mKeyboard->isOpen())
+	{
+		//Close keyboard.
+		if (config->isMappedTo("b", input) && input.value || config->isMappedTo("y", input) && input.value)
+		{
+			mKeyboard->setKeyboardIsOpen(false);
+		}
+		else if (config->isMappedTo("left", input) && input.value)
+		{
+			mKeyboard->iterateLeft();
+			mKeyboardText.setText(mKeyboard->getKeys());
+		}
+		else if (config->isMappedTo("right", input) && input.value)
+		{
+			mKeyboard->iterateRight();
+			mKeyboardText.setText(mKeyboard->getKeys());
+		}
+		else if (config->isMappedTo("a", input) && input.value)
+		{
+			if (mKeyboard->goToKey(mRoot) && mKeyboard->getPrevChoice() !=
+				getCursor()->getCleanName()[0])
+			{ //Not nullptr
+				setCursor(mKeyboard->goToKey(mRoot));
+			}
+			else
+			{
+				FileData* cursor = getCursor();
+				if (cursor->getType() == GAME)
+				{
+					Sound::getFromTheme(getTheme(), getName(), "launch")->play();
+					launch(cursor);
+				}
+				else{
+					// it's a folder
+					if (cursor->getChildren().size() > 0)
+					{
+						mCursorStack.push(cursor);
+						populateList(cursor->getChildren());
+					}
+				}
+			}
+		}  
+	}
 
 	return IGameListView::input(config, input);
+}
+
+void ISimpleGameListView::render(const Eigen::Affine3f& parentTrans)
+{
+	IGameListView::render(parentTrans);
+	if (mKeyboard->isOpen())
+		mKeyboardText.render(parentTrans * getTransform());
+}
+
+void ISimpleGameListView::update(int deltaTime)
+{
 }
