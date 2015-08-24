@@ -4,12 +4,11 @@
 #include "views/ViewController.h"
 #include "Sound.h"
 #include "Settings.h"
-#include "SystemData.h"
 
 ISimpleGameListView::ISimpleGameListView(Window* window, FileData* root) : IGameListView(window, root),
 mHeaderText(window), mHeaderImage(window), mBackground(window), mThemeExtras(window), mKeyboardText(window)
 {
-	mKeyboard = new Keyboard("en", SystemData::sSystemVector);
+	mKeyboard = make_unique<Keyboard>("en", SystemData::sSystemVector);
 	mHeaderText.setText("Logo Text");
 	mHeaderText.setSize(mSize.x(), 0);
 	mHeaderText.setPosition(0, 0);

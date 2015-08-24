@@ -1,7 +1,7 @@
 #pragma once
 
 #include "views/gamelist/IGameListView.h"
-#include "views/gamelist/Keyboard.h"
+#include "Keyboard.h"
 #include "components/TextComponent.h"
 #include "components/ImageComponent.h"
 
@@ -43,6 +43,13 @@ protected:
 	std::stack<FileData*> mCursorStack;
 
 private:
-	Keyboard* mKeyboard;
+	std::unique_ptr<Keyboard> mKeyboard;
+	//A hack for compiling under c++ 11
+	//Make Unique - returns a unique pointer.
+	template<typename T, typename... Args>
+	std::unique_ptr<T> make_unique(Args&&... args) 
+	{
+    		return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+	}
 };
 
